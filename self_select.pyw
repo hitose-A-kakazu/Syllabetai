@@ -5,10 +5,7 @@ class self_input_credit():
 
     def self_input(self,parent_frame):
 
-        input_parent_frame = ttk.Frame(parent_frame).grid()
-
-        common_subject = ttk.Frame(input_parent_frame)
-
+        common_subject = ttk.Frame(parent_frame)
         human_subject_txt = tk.Label(common_subject, text = '人文科学科目群').grid(row = 0, column = 0, pady = 10)
         human_subject_entry = tk.Entry(common_subject, width =2)
         human_subject_entry.grid(row = 0, column = 1)
@@ -21,24 +18,21 @@ class self_input_credit():
         comprehensive_subject_txt = tk.Label(common_subject, text = '総合科目群').grid(row = 3, column = 0, pady = 10)
         comprehensive_subject_entry = tk.Entry(common_subject, width =2)
         comprehensive_subject_entry.grid(row = 3, column = 1)
-        forign_txt = tk.Label(common_subject, text = '外国語科目').grid(row = 4, column = 0, pady = 10)
-        forign__entry = tk.Entry(common_subject, width =2)
-        forign__entry.grid(row = 4, column = 1)
-        eng_txt = tk.Label(common_subject, text = '英語').grid(row = 5, column = 0, pady = 10)
+        eng_txt = tk.Label(common_subject, text = '英語').grid(row = 4, column = 0, pady = 10)
         eng__entry = tk.Entry(common_subject, width =2)
-        eng__entry.grid(row = 5, column = 1)
-        forig2_txt = tk.Label(common_subject, text = '第2外国語').grid(row = 6, column = 0, pady = 10)
+        eng__entry.grid(row = 4, column = 1)
+        forig2_txt = tk.Label(common_subject, text = '第2外国語').grid(row = 5, column = 0, pady = 10)
         forig2_entry = tk.Entry(common_subject, width =2)
-        forig2_entry.grid(row = 6, column = 1)
-        physical_must_txt = tk.Label(common_subject, text = '健康・運動科目_1年必修').grid(row = 7, column = 0, pady = 10)
+        forig2_entry.grid(row = 5, column = 1)
+        physical_must_txt = tk.Label(common_subject, text = '健康・運動科目_1年必修').grid(row = 6, column = 0, pady = 10)
         physical_must_entry = tk.Entry(common_subject, width =2)
-        physical_must_entry.grid(row = 7, column = 1)
-        physical_select_txt = tk.Label(common_subject, text = '健康・運動科目_選択必修').grid(row = 8, column = 0, pady = 10)
+        physical_must_entry.grid(row = 6, column = 1)
+        physical_select_txt = tk.Label(common_subject, text = '健康・運動科目_選択必修').grid(row = 7, column = 0, pady = 10)
         physical_select_entry = tk.Entry(common_subject, width =2)
-        physical_select_entry.grid(row = 8, column = 1)
-        common_subject.grid(row = 0, column =0, padx = 75)
+        physical_select_entry.grid(row = 7, column = 1)
+        common_subject.grid(row = 0, column =0)
 
-        department_subject = ttk.Frame(input_parent_frame)
+        department_subject = ttk.Frame(parent_frame)
         basic_must1_txt = tk.Label(department_subject, text = '基本科目_1年次必須').grid(row = 0, column = 0, pady = 10)
         basic_must1_entry = tk.Entry(department_subject, width =2)
         basic_must1_entry.grid(row = 0, column = 1)
@@ -54,10 +48,10 @@ class self_input_credit():
         dep_common_txt = tk.Label(department_subject, text = '3学科共通関係科目').grid(row = 4, column = 0, pady = 10)
         dep_common_entry = tk.Entry(department_subject, width =2)
         dep_common_entry.grid(row = 4, column = 1)
-        department_subject.grid(row = 0, column =1, padx = 75)
+        department_subject.grid(row = 0, column =1)
 
 
-        other_subject = ttk.Frame(input_parent_frame)
+        other_subject = ttk.Frame(parent_frame)
         course_txt = tk.Label(other_subject, text = 'コース科目').grid(row = 0, column = 0, pady = 10)
         course_entry = tk.Entry(other_subject, width =2)
         course_entry.grid(row = 0, column = 1)
@@ -79,7 +73,12 @@ class self_input_credit():
         not_count_txt = tk.Label(other_subject, text = '卒業単位に含めない科目').grid(row = 4, column = 0, pady = 10)
         not_count_entry = tk.Entry(other_subject, width =2)
         not_count_entry.grid(row = 4, column = 1)
-        other_subject.grid(row = 0, column =2, padx = 75)
+        other_subject.grid(row = 0, column =2)
+
+        parent_frame.grid_columnconfigure(0, weight=1)
+        parent_frame.grid_columnconfigure(1, weight=1)
+        parent_frame.grid_columnconfigure(2, weight=1)
+
 
         def go_input():
             human_subject = human_subject_entry.get()
@@ -103,10 +102,11 @@ class self_input_credit():
             get_global_entry = global_entry.get()
             not_count= not_count_entry.get()
 
-        input_bt = tk.Button(input_parent_frame, text = '入力する', width = 15, command = go_input)
+        input_bt = tk.Button(parent_frame, text = '入力する', width = 15, command = go_input)
         input_bt.grid(row = 1, column = 0, columnspan = 3)
 
-        return input_parent_frame
+        parent_frame.rowconfigure(0, weight = 1)
+        parent_frame.rowconfigure(1, weight = 1)
 
 
 if __name__ == '__main__':
@@ -115,3 +115,4 @@ if __name__ == '__main__':
     set_display.self_input(root)
     root.geometry("1000x600")
     root.mainloop()
+
