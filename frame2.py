@@ -12,7 +12,7 @@ from tkinter import messagebox
 
 #--------------------------------------------------講義選択画面設定------------------------------------------------------------
 
-#*********************指定クラス , ミニカレンダー 
+#*********************指定クラス
 class ClassRegistration():
     def __init__(self, root):
 
@@ -59,8 +59,6 @@ class ClassRegistration():
         self.back_button = tk.Button(self.class_frame, text='トップページへ戻る', width=15,
                                      command=lambda : topback_func())
         self.back_button.grid(row=2, column=4)
-
-        
 
 
         def create_display_first_frame():
@@ -141,7 +139,7 @@ class ClassRegistration():
                 self.select_move_frame, relief='solid')
             self.display_second_frame.grid(row=0, column=0, padx=100, pady=20)
 
-            #self.display_second_frame.tkraise()
+            self.display_second_frame.tkraise()
             
             ##各フレームのリストを作成   外枠とラベルをまず作成する
             second_frame_list = (  # 後が0,0のやつが外枠のフレーム、1,0からは各要素、左から２番目は授業リストのキー番号にする
@@ -225,9 +223,9 @@ class ClassRegistration():
                 self.button_frame, command=button_command, text=button_text, height=3)
             all_register.grid(row=0, column=0,rowspan=2)
 
-            #クリアボタン
+            #クリアボタン***************************************************
             clear_button = tk.Button(
-                self.button_frame, text='クリア', command=clear,height=3)
+                self.button_frame, text='クリア', command=lambda: clear(button_text), height=3)
             clear_button.grid(row=0, column=1)
 
             #トップ画面に戻る
@@ -264,31 +262,66 @@ class ClassRegistration():
                     #Connection_keyの取得
                     co_key = int(sentence_list[len(sentence_list)-1])
                     print("connection_key",co_key)
+                    self.fin_judge = []
                     #0以外のconnection_keyが同じ行の取得
                     if co_key != 0:
+                        #集中の場合なので、connection_keyが同じ授業のデータを取り出す
                         relate_sentence = self.df.loc[self.df.loc[:, "Connection_key"] == co_key, [
                             "Dayofweek", "Time", "Subject", "Classroom", "Teacher", "Connection_key"]]
                         relate_sentence.loc[:, "Connection_key"] = relate_sentence["Connection_key"].astype('str')
                         relate_sentence.loc[:, "Time"] = relate_sentence["Time"].astype('str')
-
+                        
+                        #１個ずつ取り出し、重複確認を行う
                         for count in range(0, len(relate_sentence)):
                             stext = ""
                             for i in relate_sentence.iloc[count, :]:
                                 stext = stext + i + " "
-                            if len(self.selected) != 0:
-                                # 重複しているとメッセージを出す
-                                check_duplication(stext, each_sub_button)
+                            if len(self.selected) != 0: #最初の状態ではselectedに値が入ってないため
+                                # 重複確認  
+                                check_duplication(stext)
                             else:
-                                self.selected.append(stext)
+                                self.fin_judge.append(stext)
                                 take_color(stext)
+                                #each_list_value.set("登録完了")
+
+                        if len(self.fin_judge) == len(relate_sentence):
+                            #集中の場合一個目の判別はできるが、２個目の判別のさい引っ掛かると一個目が入っちゃってるからそれを解消したい
+                            # スケジュールが埋まっていないのが、最初に検知したデータと同じ数であれば、追加する仕様にする
+                            for i in self.fin_judge:
+                                self.selected.append(i)
+                                take_color(i)
+                            #each_list_value.set("登録完了")
+                        else:
+                            error_tx = sentence + 'はスケジュールが埋まっています'
+                            return messagebox.showerror('エラー', error_tx)
+                        print("NOW  選択された")
+                        print(self.fin_judge)
+                        print("")
                     else:
                         if len(self.selected) != 0:
                             #print("check_duplicationの関数")
-                            check_duplication(sentence, each_sub_button)
+                            check_duplication(sentence)
+                            if len(self.fin_judge) != 0:
+
+                                for i in self.fin_judge:
+                                    self.selected.append(i)
+                                    take_color(i)
+                                #each_list_value.set("登録完了")
+                            else:
+                                error_tx = sentence + 'はスケジュールが埋まっています'
+                                return messagebox.showerror('Error', error_tx)
+
                         else:
                             self.selected.append(sentence)
                             take_color(sentence)
+                            #each_list_value.set("登録完了")
+                print("++++++++++++今まで選択された科目++++++++++++++")
                 print(self.selected)
+                print("")
+                #ここで登録完了にしないといけない
+                each_list_value.set("登録完了")
+                each_sub_button.config(bg="purple", fg="blue")
+                each_sub_button.config(state=tk.DISABLED)
 
             #各科目登録ボタン
             each_sub_button = tk.Button(
@@ -366,7 +399,7 @@ class ClassRegistration():
                 #キーの項目があれば、valueの項目の１列２列の比較
                 datum = self.person_df[self.person_df.loc[:,"単位習得状況"] == self.dbmatch_array[sub_label_name]]
                 if int(datum["必要単位数"]) > int(datum["合計"]):
-                    print("必要単位数が足りてません")
+                    print("{}必要単位数が足りてません".format(sub_label_name))
                     color = "#ff0000"
                 else:
                     color = "#000000"
@@ -374,23 +407,23 @@ class ClassRegistration():
                 color = "#000000"
             return color
 
-        def check_duplication(check_text, each_sub_button):
+        def check_duplication(check_text):
             split_text = check_text.split()
-            print("split_text_____",split_text,"_______")
+            print("重複確認・Search Text--------->",split_text)
             judge_var = 0
+            #selected(今まで選択されたリストの中から曜日と時限を取り出し判別している)
+            # judge_varが1で既に登録されているということ
             for ttt in self.selected:
                 tetet = ttt.split()
                 if split_text[0] == tetet[0] and split_text[1] == tetet[1]:
                     judge_var = 1
             if judge_var == 1:
-                print('エラー;スケジュールが埋まってます')
-                return messagebox.showerror('エラー', 'スケジュールが埋まってます')
-                
+                print('Error ***スケジュールが埋まっています***')
             else:
-                print("スケジュールは埋まってない")
+                print("スケジュールOK")
                 check_text = check_text.replace(u"\xa0", "")
-                self.selected.append(check_text)
-                take_color(check_text)
+                self.fin_judge.append(check_text)
+                
                 # each_sub_button.config(bg="purple", fg="blue")
                 # each_sub_button.config(state=tk.DISABLED)
 
@@ -398,14 +431,25 @@ class ClassRegistration():
             findex.grid_forget()
             select_subject = topframe.Topframe(root)
 
-        def clear():
+        def clear(button_text):
+            #選択された項目の初期化
             self.selected = []
             print(self.selected)
+            #miniカレンダーの初期化
             for c in range(1, 7):
                 for r in range(1, 6):
                     label = tk.Label(self.mini_calendar,
                                      text=" ", background='#ffffff', relief='solid')
                     label.grid(column=c, row=r, sticky="nsew")
+            #授業リストの初期化
+            if button_text == '次のページへ':
+                self.display_first_frame.grid_forget()
+                create_display_first_frame()
+            elif button_text == '登録して確認する':
+                self.display_second_frame.grid_forget()
+                create_display_second_frame()
+            else:
+                pass
         
         def one_back_func(j):
             if j == 1:
@@ -413,10 +457,12 @@ class ClassRegistration():
                 self.display_first_frame.grid(
                     row=0, column=0, padx=100, pady=20)
                 self.display_first_frame.tkraise()
+                print("<--------------Page 1 Back")
             else:
                 print('ERROR')
 
         def take_color(tc_text):
+            #カレンダーに色を付ける関数
             tc_list = tc_text.split()
             llist = self.label_list[0:6]
             for la in llist:
@@ -431,6 +477,7 @@ class ClassRegistration():
         
         ##<登録して確認する>ボタンが押された時の関数
         def register():
+            print("--------------------->Frame3")
             self.display_second_frame.grid_forget()
             #選択された授業名のリストをカレンダーのframeに投げる
             display_calender = frame3.Displaycalender(root,self.selected)

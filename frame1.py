@@ -15,6 +15,8 @@ import pandas as pd
 import sqlite3
 import frame2
 import topframe
+import self_select
+from tkinter import messagebox
 
 #構造
 #file_move_frame
@@ -95,23 +97,29 @@ class Fileread():
     
         ##[ファイルを選択]ボタン押下時の関数
         def open_file_command():
-            print("ファイルが選択されました")
-            print("")
+            print("*************ファイルが選択されました*************")
             file_path = filedialog.askopenfilename()
             self.file_frame.edit_box.delete(0, tk.END)
             self.file_frame.edit_box.insert(tk.END, file_path)
 
         def file_read():
             # ファイルを開いて読み込んでdataに格納
-            data = tabula.read_pdf(
-            self.file_path, stream=True, pages='1')
-            data = data[0]
-            #保存して確認する
-            seiseki_path = "seiseki.csv"
-            data.to_csv(seiseki_path, index=None)  # pdfからcsvに
-            return seiseki_path
+            print("*************csvファイルに変換中*************")
+            try:
+                data = tabula.read_pdf(
+                self.file_path, stream=True, pages='1')
+            except Warning:
+                messagebox.showerror('エラー', 'PDFの読み込みに失敗しました。手動での入力をお願いします。')
+                selfselect_credits()
+            else:
+                data = data[0]
+                #保存して確認する
+                seiseki_path = "seiseki.csv"
+                data.to_csv(seiseki_path, index=None)  # pdfからcsvに
+                return seiseki_path
 
         def create_preview():
+            print("*************プレビュー作成中*************")
             out_format = 'jpeg'
             image = convert_from_path(pdf_path=str(
                 self.file_path), dpi=300, fmt=out_format)
@@ -124,8 +132,7 @@ class Fileread():
 
         ##ファイルのパスワード解除関数(パスワード付きPDF→ パスワードなしPDFへ)
         def unlock_command():
-            print("ファイルのパスワード解除")
-            print("")
+            print("*************ファイルのパスワード解除*************")
             with open(self.file_path, mode='rb') as f:
                 pdf = PyPDF2.PdfFileReader(f)
                 if pdf.isEncrypted:
@@ -139,10 +146,11 @@ class Fileread():
 
         #ここで読み込んだCSVをデータフレームに変える自動化コードをかく
         def cleansing():  # 一回csvで保存してpandasで読み込む必要があると思う
+            print("*************データをクレンジング中*************")
             data = pd.read_csv(self.csv_path)
             #まず全てNanの列を削除する
             data = data.dropna(how='all', axis=1)
-            print(data)
+            #print(data)
             #取得単位数の部分を取り出す  ■合計を認識して列行の位置を特定
             def grade_search(search_word):
                 for ncol in data.columns:
@@ -167,10 +175,10 @@ class Fileread():
                 return gyo, retu
 
             total_place = grade_search('■合計')
-            print(total_place)
+            #print(total_place)
             #Total credits earned(総修得単位合計)
             TCE_place = grade_search('■●総修得単位合計(■と●の合計単位数)')
-            print(TCE_place)
+            #print(TCE_place)
 
             ##################取得単位数のデータフレーム整理#######################
             aggregation_df = data.iloc[total_place[0]:TCE_place[0]+1, :]   # これは変えないとダメ
@@ -190,7 +198,8 @@ class Fileread():
                     space_index = target.rfind(' ')  # 最後のスペースを判定
                     aggregation_df.iloc[row, target_col] = target[space_index+1::]
             aggregation_df.columns = ['単位習得状況', '必要単位数', '合計']
-
+            
+            print("*************データをベースを作成中*************")
             #データベース作成
             dbname = ('Individual_Database.db')  # データベース名.db拡張子で設定
             # データベースを作成、自動コミット機能ON
@@ -246,3 +255,8 @@ class Fileread():
         def back_func():
             self.file_frame.grid_forget()
             select_subject = topframe.Topframe(root)
+
+        def selfselect_credits():
+            self.file_frame.grid_forget()
+            # pdfの読み込みに失敗した場合、自分で入力するフォーに切り替える
+            ssc = self_select.self_input_credit(root)
